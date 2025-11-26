@@ -1,18 +1,28 @@
 .sq {
   width: 50px;
   height: 50px;
-  border: 2px solid black;
+  border: 1px solid black;
   display: inline-block;
-  margin: 1px;
+  box-sizing: border-box;
 }
 
 .row {
   display: flex;
   flex-direction: row;
-  margin: 1px;
 }
 
-.grid {
+#grid {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 500px;
+  height: 500px;
+  margin-top: 20px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
