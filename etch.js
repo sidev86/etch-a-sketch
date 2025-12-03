@@ -1,6 +1,6 @@
 // Create a for loop to create the grid
 
-function drawGrid(gridSize) {
+function createGrid(gridSize) {
   const grid = document.getElementById("grid");
   const gridWidth = grid.clientWidth;
   console.log(gridWidth);
@@ -18,7 +18,9 @@ function drawGrid(gridSize) {
     }
     grid.appendChild(row);
   }
+}
 
+function drawOnGrid() {
   document.addEventListener("mousedown", () => {
     isPainting = true;
   });
@@ -93,7 +95,7 @@ function clearGrid() {
 
 let isPainting = false;
 let paintMode = "Normal";
-let gridSize;
+let gridSize = 16;
 const buttonGenerateGrid = document.querySelector("#btn-generate");
 buttonGenerateGrid.addEventListener("click", () => {
   gridSize = prompt("Please enter a grid size. (maximum 100)");
@@ -102,27 +104,38 @@ buttonGenerateGrid.addEventListener("click", () => {
     return;
   }
   clearGrid();
-  drawGrid(gridSize);
+  createGrid(gridSize);
+  drawOnGrid();
 });
 
 const buttonRainbow = document.querySelector("#btn-rainbow");
 buttonRainbow.addEventListener("click", () => {
   paintMode = "Rainbow";
-  console.log(gridSize);
-  clearGrid();
-  drawGrid(gridSize);
+  drawOnGrid();
 });
 
 const buttonFadeDark = document.querySelector("#btn-fade-dark");
 buttonFadeDark.addEventListener("click", () => {
   paintMode = "Fade";
-  clearGrid();
-  drawGrid(gridSize);
+  drawOnGrid();
 });
 
 const buttonNormal = document.querySelector("#btn-normal-mode");
 buttonNormal.addEventListener("click", () => {
   paintMode = "Normal";
-  clearGrid();
-  drawGrid(gridSize);
+  drawOnGrid();
 });
+
+const buttonClear = document.querySelector("#btn-clear");
+buttonClear.addEventListener("click", () => {
+  clearGrid();
+  createGrid(gridSize);
+  drawOnGrid();
+});
+
+function start() {
+  createGrid(16);
+  drawOnGrid();
+}
+
+start();
