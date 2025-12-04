@@ -44,11 +44,11 @@ function drawOnGrid() {
 
 function paintNormal(square) {
   square.addEventListener("mousedown", () => {
-    square.style.backgroundColor = "black";
+    square.style.backgroundColor = colorSelected;
   });
   square.addEventListener("mouseenter", () => {
     if (isPainting) {
-      square.style.backgroundColor = "black";
+      square.style.backgroundColor = colorSelected;
     }
   });
 }
@@ -68,12 +68,15 @@ function paintRainbow(square) {
 
 function paintFade(square) {
   square.dataset.light = 100;
+  const { h, s } = parseHSL(hslColor);
+  //console.log(hue, saturation);
   square.addEventListener("mousedown", () => {
     let current = parseInt(square.dataset.light);
     if (current > 0) {
       current -= 10; // scurisce di 10% ogni passaggio
+      console.log("current", current);
       square.dataset.light = current;
-      square.style.backgroundColor = `hsl(200, 80%, ${current}%)`;
+      square.style.backgroundColor = `hsl(${h}, ${s}%, ${current}%)`;
     }
   });
   square.addEventListener("mouseenter", () => {
@@ -82,10 +85,71 @@ function paintFade(square) {
       if (current > 0) {
         current -= 10; // scurisce di 10% ogni passaggio
         square.dataset.light = current;
-        square.style.backgroundColor = `hsl(200, 80%, ${current}%)`;
+        square.style.backgroundColor = `hsl(${h}, ${s}%, ${current}%)`;
       }
     }
   });
+}
+
+function hexToHsl(hex) {
+  // Rimuove eventuale "#"
+  hex = hex.replace("#", "");
+
+  // Converte il colore hex in r, g, b
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+
+  // Conversione RGB → HSL
+  let rNorm = r / 255;
+  let gNorm = g / 255;
+  let bNorm = b / 255;
+
+  const max = Math.max(rNorm, gNorm, bNorm);
+  const min = Math.min(rNorm, gNorm, bNorm);
+  let h, s;
+  let l = (max + min) / 2;
+
+  const d = max - min;
+
+  if (d === 0) {
+    h = 0;
+  } else {
+    switch (max) {
+      case rNorm:
+        h = ((gNorm - bNorm) / d) % 6;
+        break;
+      case gNorm:
+        h = (bNorm - rNorm) / d + 2;
+        break;
+      case bNorm:
+        h = (rNorm - gNorm) / d + 4;
+        break;
+    }
+    h = Math.round(h * 60);
+    if (h < 0) h += 360;
+  }
+
+  if (d === 0) {
+    s = 0;
+  } else {
+    s = d / (1 - Math.abs(2 * l - 1));
+  }
+
+  s = Math.round(s * 100);
+  l = Math.round(l * 100);
+
+  return `hsl(${h}, ${s}%, ${l}%)`;
+}
+
+function parseHSL(hslString) {
+  let values = hslString.replace("hsl(", "").replace(")", "").split(",");
+
+  return {
+    h: Number(values[0].trim()),
+    s: Number(values[1].trim().replace("%", "")),
+    l: Number(values[2].trim().replace("%", "")),
+  };
 }
 
 function clearGrid() {
@@ -96,6 +160,15 @@ function clearGrid() {
 let isPainting = false;
 let paintMode = "Normal";
 let gridSize = 16;
+let colorSelected = "#000000";
+let hslColor = hexToHsl(colorSelected);
+
+const colorPicker = document.querySelector("#color-picker");
+colorPicker.addEventListener("input", () => {
+  colorSelected = colorPicker.value;
+  hslColor = hexToHsl(colorSelected);
+});
+
 const buttonGenerateGrid = document.querySelector("#btn-generate");
 buttonGenerateGrid.addEventListener("click", () => {
   gridSize = prompt("Please enter a grid size. (maximum 100)");
