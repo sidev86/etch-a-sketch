@@ -1,10 +1,17 @@
-// Create a for loop to create the grid
+// Globals
+let isPainting = false;
+let paintMode = "Normal";
+let gridSize = 16;
+let colorSelected = "#000000";
+let hslColor = hexToHsl(colorSelected);
 
 function createGrid(gridSize) {
   const grid = document.getElementById("grid");
   const gridWidth = grid.clientWidth;
-  console.log(gridWidth);
   const squareWidth = gridWidth / gridSize;
+
+  // Clean grid
+  grid.innerHTML = "";
 
   for (let i = 0; i < gridSize; i++) {
     let row = document.createElement("div");
@@ -14,93 +21,52 @@ function createGrid(gridSize) {
       square.style.width = squareWidth + "px";
       square.style.height = squareWidth + "px";
       square.classList.add("sq");
+      square.dataset.light = 100; // lightness 100%
+
+      square.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        isPainting = true;
+        paintSquare(square);
+      });
+
+      square.addEventListener("mouseenter", () => {
+        if (isPainting) {
+          paintSquare(square);
+        }
+      });
+
       row.appendChild(square);
     }
     grid.appendChild(row);
   }
 }
 
-function drawOnGrid() {
-  document.addEventListener("mousedown", () => {
-    isPainting = true;
-  });
-
-  document.addEventListener("mouseup", () => {
-    isPainting = false;
-  });
-
-  // Create a function to change the color of the squares
-  let squares = document.querySelectorAll(".sq");
-  squares.forEach((square) => {
-    if (paintMode === "Normal") {
-      paintNormal(square);
-    } else if (paintMode === "Rainbow") {
-      paintRainbow(square);
-    } else if (paintMode === "Fade") {
-      paintFade(square);
-    }
-  });
-}
-
-function paintNormal(square) {
-  square.addEventListener("mousedown", () => {
+function paintSquare(square) {
+  if (paintMode === "Normal") {
     square.style.backgroundColor = colorSelected;
-  });
-  square.addEventListener("mouseenter", () => {
-    if (isPainting) {
-      square.style.backgroundColor = colorSelected;
-    }
-  });
-}
-
-function paintRainbow(square) {
-  square.addEventListener("mousedown", () => {
-    var randomColor = Math.floor(Math.random() * 16777215).toString(16);
+  } else if (paintMode === "Rainbow") {
+    const randomColor = Math.floor(Math.random() * 16777215).toString(16);
     square.style.backgroundColor = "#" + randomColor;
-  });
-  square.addEventListener("mouseenter", () => {
-    if (isPainting) {
-      var randomColor = Math.floor(Math.random() * 16777215).toString(16);
-      square.style.backgroundColor = "#" + randomColor;
-    }
-  });
-}
-
-function paintFade(square) {
-  square.dataset.light = 100;
-  const { h, s } = parseHSL(hslColor);
-  //console.log(hue, saturation);
-  square.addEventListener("mousedown", () => {
+  } else if (paintMode === "Fade") {
     let current = parseInt(square.dataset.light);
     if (current > 0) {
-      current -= 10; // scurisce di 10% ogni passaggio
-      console.log("current", current);
+      current -= 10;
       square.dataset.light = current;
+      const { h, s } = parseHSL(hslColor);
       square.style.backgroundColor = `hsl(${h}, ${s}%, ${current}%)`;
     }
-  });
-  square.addEventListener("mouseenter", () => {
-    if (isPainting) {
-      let current = parseInt(square.dataset.light);
-      if (current > 0) {
-        current -= 10; // scurisce di 10% ogni passaggio
-        square.dataset.light = current;
-        square.style.backgroundColor = `hsl(${h}, ${s}%, ${current}%)`;
-      }
-    }
-  });
+  }
 }
 
 function hexToHsl(hex) {
-  // Rimuove eventuale "#"
+  // Need the hex string without the initial #
   hex = hex.replace("#", "");
 
-  // Converte il colore hex in r, g, b
+  // Take the r g b values from the hex
   const r = parseInt(hex.substring(0, 2), 16);
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
 
-  // Conversione RGB → HSL
   let rNorm = r / 255;
   let gNorm = g / 255;
   let bNorm = b / 255;
@@ -142,6 +108,7 @@ function hexToHsl(hex) {
   return `hsl(${h}, ${s}%, ${l}%)`;
 }
 
+// Get the int values from the hsl string
 function parseHSL(hslString) {
   let values = hslString.replace("hsl(", "").replace(")", "").split(",");
 
@@ -152,16 +119,42 @@ function parseHSL(hslString) {
   };
 }
 
-function clearGrid() {
-  const grid = document.getElementById("grid");
-  grid.innerHTML = "";
+// Highlight the button of the draw active mode
+function highlightActiveModeButton() {
+  // To highlight the new active mode, first remove the old highlighted button
+  const modeButtons = document.querySelectorAll(".mode-btn");
+  modeButtons.forEach((button) => {
+    button.classList.remove("active-mode");
+  });
+
+  // Now i will highlight the new button active
+  if (paintMode === "Normal") {
+    buttonNormal.classList.add("active-mode");
+  } else if (paintMode === "Rainbow") {
+    buttonRainbow.classList.add("active-mode");
+  } else if (paintMode === "Fade") {
+    buttonFadeDark.classList.add("active-mode");
+  }
 }
 
-let isPainting = false;
-let paintMode = "Normal";
-let gridSize = 16;
-let colorSelected = "#000000";
-let hslColor = hexToHsl(colorSelected);
+// Clean the grid
+function clearGrid() {
+  const squares = document.querySelectorAll(".sq");
+  squares.forEach((square) => {
+    square.style.backgroundColor = "";
+    square.dataset.light = "100";
+  });
+}
+
+function initializeGlobalMouseListeners() {
+  document.addEventListener("mousedown", () => {
+    isPainting = true;
+  });
+
+  document.addEventListener("mouseup", () => {
+    isPainting = false;
+  });
+}
 
 const colorPicker = document.querySelector("#color-picker");
 colorPicker.addEventListener("input", () => {
@@ -171,44 +164,44 @@ colorPicker.addEventListener("input", () => {
 
 const buttonGenerateGrid = document.querySelector("#btn-generate");
 buttonGenerateGrid.addEventListener("click", () => {
+  let gridSizeTemp = gridSize;
   gridSize = prompt("Please enter a grid size. (maximum 100)");
-  if (gridSize > 100 || gridSize < 1) {
-    alert("Please enter a number less than 100");
+  if (gridSize > 100 || gridSize < 1 || isNaN(gridSize)) {
+    gridSize = gridSizeTemp;
+    alert("Please enter a valid number between 1 and 100");
     return;
   }
-  clearGrid();
   createGrid(gridSize);
-  drawOnGrid();
 });
 
 const buttonRainbow = document.querySelector("#btn-rainbow");
 buttonRainbow.addEventListener("click", () => {
   paintMode = "Rainbow";
-  drawOnGrid();
+  highlightActiveModeButton();
 });
 
 const buttonFadeDark = document.querySelector("#btn-fade-dark");
 buttonFadeDark.addEventListener("click", () => {
   paintMode = "Fade";
-  drawOnGrid();
+  highlightActiveModeButton();
 });
 
 const buttonNormal = document.querySelector("#btn-normal-mode");
 buttonNormal.addEventListener("click", () => {
   paintMode = "Normal";
-  drawOnGrid();
+  highlightActiveModeButton();
 });
 
 const buttonClear = document.querySelector("#btn-clear");
 buttonClear.addEventListener("click", () => {
   clearGrid();
-  createGrid(gridSize);
-  drawOnGrid();
 });
 
+// Called when the page is loaded
 function start() {
-  createGrid(16);
-  drawOnGrid();
+  createGrid(gridSize);
+  initializeGlobalMouseListeners();
 }
 
-start();
+// Call the function when content is ready
+window.addEventListener("DOMContentLoaded", start);
